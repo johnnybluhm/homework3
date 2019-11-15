@@ -93,8 +93,55 @@ ORDER BY total_inventory_value ASC;
 --QUERY 5
 
 SELECT ship_country, count(ship_via) AS shipped FROM orders WHERE
-orders.ship_country = ANY(SELECT ship_country FROM orders WHERE ship_country !='USA') AND orders.order_date = ANY(SELECT YEAR(order_date) AS year, MONTH(order_date) AS month FROM orders WHERE month='08' AND year='1996')
+(ship_country <> 'USA') AND shipped_date BETWEEN '1996-08-01' AND '1996-08-31'
 GROUP BY ship_country;
+
+/* RESULT 
+ ship_country | shipped 
+--------------+---------
+ Spain        |       2
+ Mexico       |       1
+ Brazil       |       1
+ UK           |       1
+ Italy        |       1
+ Venezuela    |       2
+ Germany      |       7
+ Finland      |       1
+ Sweden       |       2
+ France       |       2
+(10 rows)
+
+*/
+
+--QUERY 6
+
+SELECT customer_id FROM orders GROUP BY
+customer_id HAVING
+count(*)<4;
+
+/* RESULT
+ customer_id 
+-------------
+ CONSH
+ LAZYK
+ GROSR
+ FRANR
+ LAUGB
+ THECR
+ BOLID
+ NORTS
+ CENTC
+ TRAIH
+(10 rows)
+
+*/
+
+--QUERY 7
+
+
+
+
+
 
 
 
