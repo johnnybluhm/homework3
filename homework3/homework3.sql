@@ -138,13 +138,153 @@ count(*)<4;
 
 --QUERY 7
 
+SELECT units_in_stock FROM products GROUP BY 
+units_in_stock HAVING
+(count(supplier_id)>3);
+
+/* 
+RESULT
+ units_in_stock 
+----------------
+              0
+             15
+             26
+             17
+(4 rows)
+*/
+
+--QUERY 8 
+
+SELECT company_name, product_name, unit_price FROM products
+INNER JOIN suppliers
+ON products.supplier_id= suppliers.supplier_id
+WHERE products.supplier_id= ANY(SELECT suppliers.supplier_id FROM suppliers WHERE country= 'France')
+ORDER BY unit_price DESC;
+
+/* 
+RESULT
+        company_name        |      product_name      | unit_price 
+----------------------------+------------------------+------------
+ Aux joyeux ecclésiastiques | Côte de Blaye          |      263.5
+ Gai pâturage               | Raclette Courdavault   |         55
+ Gai pâturage               | Camembert Pierrot      |         34
+ Aux joyeux ecclésiastiques | Chartreuse verte       |         18
+ Escargots Nouveaux         | Escargots de Bourgogne |      13.25
+(5 rows)
+*/
 
 
+--QUERY 9
+
+SELECT last_name, first_name, title, extension, COUNT(employees.employee_id) AS number_of_orders FROM Employees 
+INNER JOIN orders
+ON employees.employee_id = orders.employee_id
+GROUP BY last_name, first_name, title, extension HAVING
+count(DISTINCT)<75;
+
+/*RESULT
+ last_name | first_name |        title         | extension | number_of_orders 
+-----------+------------+----------------------+-----------+------------------
+ Suyama    | Michael    | Sales Representative | 428       |               67
+ Buchanan  | Steven     | Sales Manager        | 3453      |               42
+ King      | Robert     | Sales Representative | 465       |               72
+ Dodsworth | Anne       | Sales Representative | 452       |               43
+(4 rows)
+
+*/
+
+--QUERY 16
+
+SELECT last_name, first_name, COUNT(DISTINCT customer_id) AS clients FROM Employees 
+INNER JOIN orders
+ON employees.employee_id= orders.employee_id
+GROUP BY last_name, first_name HAVING
+count(DISTINCT orders.customer_id)>50
+ORDER BY clients DESC;
+
+/* RESULT
+
+-------+------------+---------
+ Peacock   | Margaret   |      75
+ Davolio   | Nancy      |      65
+ Leverling | Janet      |      63
+ Fuller    | Andrew     |      59
+ Callahan  | Laura      |      56
+(5 rows)
+*/
+
+--QUERY 17
+
+SELECT product_name FROM products WHERE
+unit_price<(SELECT AVG(unit_price) from products);
+
+/* RESULT
+           product_name           
+----------------------------------
+ Chai
+ Chang
+ Aniseed Syrup
+ Chef Anton's Cajun Seasoning
+ Chef Anton's Gumbo Mix
+ Grandma's Boysenberry Spread
+ Queso Cabrales
+ Konbu
+ Tofu
+ Genen Shouyu
+ Pavlova
+ Teatime Chocolate Biscuits
+ Sir Rodney's Scones
+ Gustaf's Knäckebröd
+ Tunnbröd
+ Guaraná Fantástica
+ NuNuCa Nuß-Nougat-Creme
+ Nord-Ost Matjeshering
+ Gorgonzola Telino
+ Geitost
+ Sasquatch Ale
+ Steeleye Stout
+ Inlagd Sill
+ Gravad lax
+ Chartreuse verte
+ Boston Crab Meat
+ Jack's New England Clam Chowder
+ Singaporean Hokkien Fried Mee
+ Gula Malacca
+ Rogede sild
+ Spegesild
+ Zaanse koeken
+ Chocolade
+ Maxilaku
+ Valkoinen suklaa
+ Filo Mix
+ Tourtière
+ Pâté chinois
+ Ravioli Angelo
+ Escargots de Bourgogne
+ Sirop d'érable
+ Louisiana Fiery Hot Pepper Sauce
+ Louisiana Hot Spiced Okra
+ Laughing Lumberjack Lager
+ Scottish Longbreads
+ Outback Lager
+ Flotemysost
+ Röd Kaviar
+ Longlife Tofu
+ Rhönbräu Klosterbier
+ Lakkalikööri
+ Original Frankfurter grüne Soße
+(52 rows)
+*/
+
+--QUERY 18
+
+SELECT count(employees.city) FROM employees
+INNER JOIN orders
+ON employees.city = orders.ship_city
+WHERE Select last
 
 
-
-
-
-
-
+SELECT * FROM orders
+WHERE ship_city = ANY(SELECT city from Employees)
+ORDER BY customer_id;
 
