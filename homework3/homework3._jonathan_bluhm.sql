@@ -5,7 +5,7 @@ Employees.city = ANY(Select Employees.city FROM Employees WHERE city!='London') 
 GROUP BY last_name, first_name
 ORDER BY last_name;
 
-/*RESULT
+--RESULT
 
  last_name |   name   
 -----------+----------
@@ -15,7 +15,6 @@ ORDER BY last_name;
  Leverling | Janet
  Peacock   | Margaret
 (5 rows)
-*/
 
 --QUERY 2
 
