@@ -138,19 +138,21 @@ count(*)<4;
 
 --QUERY 7
 
-SELECT units_in_stock FROM products GROUP BY 
-units_in_stock HAVING
-(count(supplier_id)>3);
+SELECT supplier_id, SUM(units_in_stock*unit_price) FROM products GROUP BY 
+supplier_id HAVING
+COUNT(DISTINCT product_id)>3;
 
 /* 
 RESULT
- units_in_stock 
-----------------
-              0
-             15
-             26
-             17
+ supplier_id |       sum        
+-------------+------------------
+           2 |  2833.7999420166
+           7 | 4409.65005874634
+           8 | 4276.99999523163
+          12 | 3301.84996032715
 (4 rows)
+
+
 */
 
 --QUERY 8 
@@ -192,6 +194,45 @@ count(DISTINCT)<75;
 (4 rows)
 
 */
+
+--QUERY 10
+
+CREATE TABLE top_items(
+    item_id INT NOT NULL,
+    item_code INT NOT NULL,
+    item_name VARCHAR(40) NOT NULL,
+    inventory_date DATE NOT NULL,
+    supplier_id INT NOT NULL,
+    item_quantity INT NOT NULL,
+    item_price DECIMAL(9,2) NOT NULL,
+    PRIMARY KEY(item_id)
+);
+
+--QUERY 11
+
+INSERT INTO top_items
+SELECT product_id, category_id, product_name, CURRENT_DATE, units_in_stock, unit_price, supplier_id 
+FROM products 
+WHERE units_in_stock*unit_price > 2500;
+
+--QUERY 12
+
+DELETE FROM top_items
+WHERE item_quantity < 50;
+
+--QUERY 13
+
+ALTER TABLE top_items
+ADD inventory_value DECIMAL(9,2) DEFAULT 0;
+
+--QUERY 14
+
+UPDATE top_items
+SET inventory_value = item_price*item_quantity;
+
+--QUERY 15
+
+DROP TABLE top_items;
 
 --QUERY 16
 
@@ -278,13 +319,76 @@ unit_price<(SELECT AVG(unit_price) from products);
 
 --QUERY 18
 
-SELECT count(employees.city) FROM employees
-INNER JOIN orders
-ON employees.city = orders.ship_city
-WHERE Select last
+SELECT count(DISTINCT orders.employee_id) FROM orders JOIN employees
+ON orders.employee_id = employees.employee_id
+WHERE orders.ship_city != employees.city AND orders.ship_address != employees.address;
+
+/*RESULT 
+ count 
+-------
+     9
+(1 row)
+*/
+
+--QUERY 19
+
+SELECT employees.first_name, employees.last_name, temp1.client_count, temp2.order_count from employees, (SELECT employee_id, count(DISTINCT customer_id) as client_count FROM orders
+WHERE order_date BETWEEN '1998-01-01' AND '1998-12-31'
+GROUP BY employee_id) as temp1, (SELECT orders.employee_id as employee_id, count(orders.order_id) as order_count FROM orders
+GROUP BY orders.employee_id) as temp2 where employees.employee_id = temp1.employee_id and temp1.employee_id = temp2.employee_id
+
+/*RESULT
+
+ first_name | last_name | client_count | order_count 
+------------+-----------+--------------+-------------
+ Nancy      | Davolio   |           32 |         123
+ Andrew     | Fuller    |           34 |          96
+ Janet      | Leverling |           30 |         127
+ Margaret   | Peacock   |           33 |         156
+ Steven     | Buchanan  |           11 |          42
+ Michael    | Suyama    |           17 |          67
+ Robert     | King      |           21 |          72
+ Laura      | Callahan  |           23 |         104
+ Anne       | Dodsworth |           16 |          43
+(9 rows)
+
+*/
+
+--QUERY 20
+
+‘Janet Leverling’ wants to know the count of all the orders which were getting shipped from ‘Sweden’ and took less than a week time to ship.
 
 
-SELECT * FROM orders
-WHERE ship_city = ANY(SELECT city from Employees)
-ORDER BY customer_id;
+SELECT count(order_id) FROM orders
+WHERE ship_country = 'Sweden' 
+AND shipped_date-order_date<7 
+AND employee_id = (SELECT employee_id FROM employees WHERE first_name='Janet');
+
+/* RESULT
+ count 
+-------
+     1
+(1 row)
+*/
+
+--QUERY 21
+
+The company ‘Leka Trading’ was blacklisted by the regulators. List out all the product which were being supplied from this supplier.
+
+SELECT product_name FROM products
+JOIN suppliers
+ON products.supplier_id= suppliers.supplier_id
+WHERE company_name = 'Leka Trading';
+
+/* RESULT
+
+         product_name          
+-------------------------------
+ Singaporean Hokkien Fried Mee
+ Ipoh Coffee
+ Gula Malacca
+(3 rows)
+
+*/
+
 
